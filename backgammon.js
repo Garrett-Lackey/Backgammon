@@ -15,7 +15,7 @@ const white      =  1;
 // Contains 24 points with an array to show ownership and amount located 
 board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
-         [red, 6], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
+         [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
 
 // the goal of the game is to 'bear off' all your tablemen
@@ -33,6 +33,16 @@ board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
 
 const getColorAt = index => board[index][0] === red ? "r" : (board[index][0] === white ? "w" : "|");
 const getValueAt = index => board[index][1];
+
+const getAvailableTurns = color => {
+    let turns = [];
+    board.forEach((element, index) => {
+        if (element[0] == color) turns.push(index)
+    })
+    return turns;
+}
+
+const rollDice = () => [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
 
 const displayBoard = () => {
     let boardStr = "";
@@ -64,4 +74,7 @@ const displayBoard = () => {
 } 
 
 displayBoard();
+console.log(getAvailableTurns(white));
+console.log(getAvailableTurns(red));
+console.log(rollDice());
 rl.close();
