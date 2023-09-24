@@ -17,6 +17,7 @@ board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
+bar = [];
 
 // the goal of the game is to 'bear off' all your tablemen
 // to 'bear off' tablemen, all 15 tablemen must be in your home area 
@@ -44,13 +45,41 @@ const getAvailableTurns = color => {
 
 const rollDice = () => [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
 
+const moveTableman = (point, dist, team) => {
+    let startPos = board[point];
+    if (startPos[0] != team) return false;
+    if (startPos[0] === red) dist *= -1;
+
+    let endPos = board[point + dist];
+    if ((startPos[0] != endPos[0] || endPos[0] != unassigned) && endPos[1] > 1)
+        return false;
+
+    if (endPos[1] == 1 && endPos[0] != team) {
+        bar.push (endPos);
+        endPos[0] = startPos[0];
+        endPos[1] = 1;
+    } else if (endPos[0] == team) { 
+        endPos[1]++;
+    }
+    else {
+        endPos[0] = startPos[0];
+        endPos[1] = 1;
+    }
+    startPos[1]--;
+    console.log(startPos, endPos);
+
+    if (startPos[1] < 1) startPos[0] = unassigned;
+    
+    return true;
+}
+
 const displayBoard = () => {
     let boardStr = "";
     for (let i = 0; i < 12; i++) {
         let addStr = "";
         debugger
         if (i === 0) {
-            for (let j = 0; j < 12; j++)
+            for (let j = 11; j >= 0; j--)
                 addStr += `${getColorAt(j)} `;
         } else if (i === 11) {
             for (let j = 12; j < 24; j++)
@@ -74,7 +103,12 @@ const displayBoard = () => {
 } 
 
 displayBoard();
-console.log(getAvailableTurns(white));
+let whiteTurn = getAvailableTurns(white);
+console.log(whiteTurn);
 console.log(getAvailableTurns(red));
-console.log(rollDice());
+let roll = rollDice();
+console.log(roll);
+console.log(moveTableman(whiteTurn[0], roll[0], white));
+console.log(moveTableman(whiteTurn[0], roll[1], white));
+displayBoard();
 rl.close();
