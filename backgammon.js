@@ -33,14 +33,44 @@ bar = [];
 // a player is under no obligation to bear off if he can make an otherwise legal move
 
 const getColorAt = index => board[index][0] === red ? "r" : (board[index][0] === white ? "w" : "|");
-const getValueAt = index => board[index][1];
+const getPointAt = index => {
+    if (index < 0 || index > board.length)
+        return null;
+    return board[index];
+}
+const getValueAt = index => {
+    if (index < 0 || index > board.length)
+        return null;
+    return board[index][1];
+}
 
+// Returns an array of possible indexes on the board for a color 
 const getAvailableTurns = color => {
     let turns = [];
     board.forEach((element, index) => {
         if (element[0] == color) turns.push(index)
     })
     return turns;
+}
+
+// Filters a list of turns to only give the legal turns with each roll
+const filterLegalTurns = (color, diceRollArr) => {
+    if (diceRollArr[0] === diceRollArr[1])
+        diceRollArr = [diceRollArr[0]];
+    let availableTurns = getAvailableTurns(color);
+    let legalTurnCombos = [];
+
+    availableTurns.forEach(turn => {
+        diceRollArr.forEach(roll => {
+            let endValue = getPointAt(turn + roll);
+            if (endValue == null) 
+                return;
+            if (endValue[0] === color || endValue[0] === unassigned || endValue[1] === 1) 
+                legalTurnCombos.push([turn, roll]);
+        });
+    });
+
+    return legalTurnCombos;
 }
 
 const rollDice = () => [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
@@ -66,7 +96,6 @@ const moveTableman = (point, dist, team) => {
         endPos[1] = 1;
     }
     startPos[1]--;
-    console.log(startPos, endPos);
 
     if (startPos[1] < 1) startPos[0] = unassigned;
     
@@ -108,6 +137,8 @@ console.log(whiteTurn);
 console.log(getAvailableTurns(red));
 let roll = rollDice();
 console.log(roll);
+let legalWhiteTurns = filterLegalTurns(white, roll);
+console.log(legalWhiteTurns);
 console.log(moveTableman(whiteTurn[0], roll[0], white));
 console.log(moveTableman(whiteTurn[0], roll[1], white));
 displayBoard();
