@@ -13,6 +13,12 @@ const white      =  1;
 
 // Global Variables
 // Contains 24 points with an array to show ownership and amount located 
+// DEBUG BOARD
+// board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
+//          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
+//          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
+//          [white, 5], [-1, 0], [-1, 0], [-1, 0], [white, 5], [red, 2] ];
+// DEFAULT BOARD LAYOUT
 board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
@@ -43,6 +49,8 @@ const getValueAt = index => {
         return null;
     return board[index][1];
 }
+const getHomePoints = color => board.filter((point, index) => color == white ? index >= 19 : index <= 4)
+const getAllValues = (points, color) => points.reduce((acc, point) => point[0] == color ? acc + point[1] : acc, 0)
 
 // Returns an array of possible indexes on the board for a color 
 const getAvailableTurns = color => {
@@ -58,6 +66,16 @@ const filterLegalTurns = (color, diceRollArr) => {
     if (diceRollArr[0] === diceRollArr[1])
         diceRollArr = [diceRollArr[0]];
     let availableTurns = getAvailableTurns(color);
+    let insideHomePoints = getHomePoints();
+    
+    // If all the tablemen are located in the players home, then any move is legal
+    let total = getAllValues(board, color);
+    total -= getAllValues(insideHomePoints, color);
+    console.log(getAllValues(board, color), getAllValues(insideHomePoints, color))
+    if (!total) 
+        return availableTurns;
+
+    // Filter the moves available to those that don't bear off a tablemen
     let legalTurnCombos = [];
 
     availableTurns.forEach(turn => {
@@ -75,20 +93,20 @@ const filterLegalTurns = (color, diceRollArr) => {
 
 const rollDice = () => [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
 
-const moveTableman = (point, dist, team) => {
+const moveTableman = (point, dist, color) => {
     let startPos = board[point];
-    if (startPos[0] != team) return false;
+    if (startPos[0] != color) return false;
     if (startPos[0] === red) dist *= -1;
 
     let endPos = board[point + dist];
-    if ((startPos[0] != endPos[0] || endPos[0] != unassigned) && endPos[1] > 1)
+    if (endPos[0] == (color == white ? red : white) && endPos[1] > 1)
         return false;
 
-    if (endPos[1] == 1 && endPos[0] != team) {
+    if (endPos[1] == 1 && endPos[0] != color) {
         bar.push (endPos);
         endPos[0] = startPos[0];
         endPos[1] = 1;
-    } else if (endPos[0] == team) { 
+    } else if (endPos[0] == color) { 
         endPos[1]++;
     }
     else {
@@ -139,7 +157,7 @@ let roll = rollDice();
 console.log(roll);
 let legalWhiteTurns = filterLegalTurns(white, roll);
 console.log(legalWhiteTurns);
-console.log(moveTableman(whiteTurn[0], roll[0], white));
-console.log(moveTableman(whiteTurn[0], roll[1], white));
+console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
+console.log(moveTableman(legalWhiteTurns[1][0], legalWhiteTurns[1][1], white));
 displayBoard();
 rl.close();
