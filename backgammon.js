@@ -17,26 +17,29 @@ const white      =  1;
 board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
-         [white, 5], [-1, 0], [-1, 0], [-1, 0], [white, 5], [red, 2] ];
+         [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
 // DEFAULT BOARD LAYOUT
-// board = [[red, 1], [red, 1], [red, 1], [red, 1], [red, 1], [red, 5],
-//          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
+// board = [[white, 2], [red, 1], [red, 1], [red, 1], [red, 1], [red, 1],
+//          [red, 1], [red, 1], [-1, 0], [-1, 0], [-1, 0], [white, 5],
 //          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
 //          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
-bar = [0, 0];
+bar = [1, 3];
 
+// IMPLEMENTED
 // the goal of the game is to 'bear off' all your tablemen
 // to 'bear off' tablemen, all 15 tablemen must be in your home area 
 // the white home area is indexes 19-23
 // the red home area is indexes 0-4
-// each turn 2 dice are rolled, and each die represents the movemenet of one piece
-// rolling doubles allows each die to be used twice
-// if a move can be played, it must be played
-// if a move allows another move to be played, when no other move would be possible, it must be played
+// each turn 2 dice are rolled, and each die represents the movement of one piece
 // a move to another colors controlled point is not allowed
 // if a move to another colors point only has one tablmen, then the blot (single tableman on a point) is placed on the bar
 // to enter the board off the bar, the player must have a roll into the opponents home points (1-6), if no die allows this the turn is skipped
 // a player is under no obligation to bear off if he can make an otherwise legal move
+
+// UNIMPLEMENTED
+// rolling doubles allows each die to be used twice
+// if a move can be played, it must be played
+// if a move allows another move to be played, when no other move would be possible, it must be played
 
 const getColorAt = index => board[index][0] === red ? "r" : (board[index][0] === white ? "w" : "|");
 const getPointAt = index => {
@@ -120,7 +123,7 @@ const moveTableman = (point, dist, color) => {
         return false;
 
     if (endPos[1] == 1 && endPos[0] != color) {
-        bar[color]++;
+        bar[color == white ? red : white]++;
         endPos[0] = startPos[0];
         endPos[1] = 1;
     } else if (endPos[0] == color) { 
@@ -159,7 +162,7 @@ const displayBoard = () => {
                 addStr += `${currentValue >= 11 - i ? (currentValue > 5 && i === 6 ? currentValue : '*'):' '} `.slice(0,2);
             }
         }
-        if (i === 5) addStr += '\n-----------------------';
+        if (i === 5) addStr += `\n------${(bar[white] ? `w:${bar[white]}`.padEnd(6, "-") : "------") + (bar[red] ? `${bar[red]}:r`.padStart(5, "-") : "------")}------`;
         debugger
         boardStr += `${addStr}\n`;
     }
