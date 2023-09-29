@@ -14,16 +14,16 @@ const white      =  1;
 // Global Variables
 // Contains 24 points with an array to show ownership and amount located 
 // DEBUG BOARD
-// board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
-//          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
-//          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
-//          [white, 5], [-1, 0], [-1, 0], [-1, 0], [white, 5], [red, 2] ];
-// DEFAULT BOARD LAYOUT
 board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
-         [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
-bar = [];
+         [white, 5], [-1, 0], [-1, 0], [-1, 0], [white, 5], [red, 2] ];
+// DEFAULT BOARD LAYOUT
+// board = [[red, 1], [red, 1], [red, 1], [red, 1], [red, 1], [red, 5],
+//          [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
+//          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
+//          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
+bar = [0, 0];
 
 // the goal of the game is to 'bear off' all your tablemen
 // to 'bear off' tablemen, all 15 tablemen must be in your home area 
@@ -61,17 +61,23 @@ const getAvailableTurns = color => {
     return turns;
 }
 
-// Filters a list of turns to only give the legal turns with each roll
-const filterLegalTurns = (color, diceRollArr) => {
-    if (diceRollArr[0] === diceRollArr[1])
-        diceRollArr = [diceRollArr[0]];
+// Filters a list of turns to only give the legal turns for a roll
+const filterLegalTurns = (color, roll) => {
     let availableTurns = getAvailableTurns(color);
     let insideHomePoints = getHomePoints();
     
+    // If the player has a point on the bar, its their only allowed move
+    if (bar[color]) {
+        console.log((color == white ? -1 : 24) + (color == white ? roll : -roll));
+        if (board[(color == white ? -1 : 24) + (color == white ? roll : -roll)][0] != (color == white ? red : white))
+            return [['Bar', roll]]; // Nested to follow convention of an array of moves [start, roll]
+        return [];
+    }
+
     // If all the tablemen are located in the players home, then any move is legal
     let total = getAllValues(board, color);
     total -= getAllValues(insideHomePoints, color);
-    console.log(getAllValues(board, color), getAllValues(insideHomePoints, color))
+    
     if (!total) 
         return availableTurns;
 
@@ -79,13 +85,11 @@ const filterLegalTurns = (color, diceRollArr) => {
     let legalTurnCombos = [];
 
     availableTurns.forEach(turn => {
-        diceRollArr.forEach(roll => {
-            let endValue = getPointAt(turn + roll);
-            if (endValue == null) 
-                return;
-            if (endValue[0] === color || endValue[0] === unassigned || endValue[1] === 1) 
-                legalTurnCombos.push([turn, roll]);
-        });
+        let endValue = getPointAt(turn + roll);
+        if (endValue == null) 
+            return;
+        if (endValue[0] === color || endValue[0] === unassigned || endValue[1] === 1) 
+            legalTurnCombos.push([turn, roll]);
     });
 
     return legalTurnCombos;
@@ -94,6 +98,19 @@ const filterLegalTurns = (color, diceRollArr) => {
 const rollDice = () => [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
 
 const moveTableman = (point, dist, color) => {
+    console.log((color == white ? -1 : 24) + (color == white ? dist : -dist));
+
+    if (point === "Bar") 
+        // If the tableman is entering the board onto a point thats not the other players
+        if (board[(color == white ? -1 : 24) + (color == white ? dist : -dist)][0] !== (color == white ? red : white)){
+            board[(color == white ? -1 : 24) + (color == white ? dist : -dist)][0] = color;
+            board[(color == white ? -1 : 24) + (color == white ? dist : -dist)][1]++;
+            bar[color]--;
+            return true;
+        } else return false;
+
+    
+
     let startPos = board[point];
     if (startPos[0] != color) return false;
     if (startPos[0] === red) dist *= -1;
@@ -103,7 +120,7 @@ const moveTableman = (point, dist, color) => {
         return false;
 
     if (endPos[1] == 1 && endPos[0] != color) {
-        bar.push (endPos);
+        bar[color]++;
         endPos[0] = startPos[0];
         endPos[1] = 1;
     } else if (endPos[0] == color) { 
@@ -149,15 +166,21 @@ const displayBoard = () => {
     console.log(boardStr);
 } 
 
+
+
 displayBoard();
 let whiteTurn = getAvailableTurns(white);
 console.log(whiteTurn);
 console.log(getAvailableTurns(red));
 let roll = rollDice();
 console.log(roll);
-let legalWhiteTurns = filterLegalTurns(white, roll);
+let legalWhiteTurns = filterLegalTurns(white, roll[0]);
 console.log(legalWhiteTurns);
+if (legalWhiteTurns.length)
 console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
-console.log(moveTableman(legalWhiteTurns[1][0], legalWhiteTurns[1][1], white));
+legalWhiteTurns = filterLegalTurns(white, roll[1]);
+console.log(legalWhiteTurns);
+if (legalWhiteTurns.length)
+console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
 displayBoard();
 rl.close();
