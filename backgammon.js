@@ -4,7 +4,7 @@ const readline = require('node:readline');
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
-  });
+});
 
 // Constant Variables
 const unassigned = -1;
@@ -54,6 +54,11 @@ const getValueAt = index => {
 }
 const getHomePoints = color => board.filter((point, index) => color == white ? index >= 19 : index <= 4)
 const getAllValues = (points, color) => points.reduce((acc, point) => point[0] == color ? acc + point[1] : acc, 0)
+const isWinner = () => {
+    if (getAllValues(board, white).length == 0) return white;
+    else if (getAllValues(board, red).length == 0) return red;
+    return -1;
+}
 
 // Returns an array of possible indexes on the board for a color 
 const getAvailableTurns = color => {
@@ -68,7 +73,7 @@ const getAvailableTurns = color => {
 const filterLegalTurns = (color, roll) => {
     let availableTurns = getAvailableTurns(color);
     let insideHomePoints = getHomePoints();
-    
+    debugger
     // If the player has a point on the bar, its their only allowed move
     if (bar[color]) {
         console.log((color == white ? -1 : 24) + (color == white ? roll : -roll));
@@ -139,7 +144,7 @@ const moveTableman = (point, dist, color) => {
 }
 
 const displayBoard = () => {
-    let boardStr = "1 1 1\n2 1 0 9 8 7 6 5 4 3 2 1\n";
+    let boardStr = "\n1 1 1\n2 1 0 9 8 7 6 5 4 3 2 1\n";
     for (let i = 0; i < 12; i++) {
         let addStr = "";
         
@@ -176,13 +181,17 @@ const getTurnText = (turns) => {
 const chooseTurn = (color, rolls) => {
     let turns = rolls.map(roll => filterLegalTurns(color, roll));
     turns = turns.flat(1);
+
     if (!turns.length) {
         console.log("No Available Moves.")
+        if(!(isWinner() + 1)) gameLoop((color + 1) % 2);
         return;
     }
+
     rl.question(`Available Turns: \n${getTurnText(turns)}\nChoose a turn: `, (answer) => {
         answer = parseInt(answer);
-        if (isNaN(answer)) {
+
+        if (isNaN(answer) || answer > turns.length) {
             console.log("\nInvalid Input.\n");
             chooseTurn(color, rolls);
             return;
@@ -191,18 +200,21 @@ const chooseTurn = (color, rolls) => {
 
         moveTableman(move, roll, color);
         displayBoard();
+        
         rolls.splice(rolls.indexOf(roll), 1);
         if (rolls.length) chooseTurn(color, rolls)
-        else rl.close();
+        else if(!(isWinner() + 1)) gameLoop((color + 1) % 2);
     });
 }
 
-const gameLoop = () => {
+const gameLoop = (color) => {
     displayBoard();
     let rolls = rollDice();
-    chooseTurn(white, rolls);
+    console.log(`${color === white ? "White" : "Red"}'s turn.\n`)
+    if (rolls[0] == rolls[1]) rolls = [...rolls, ...rolls];
+    chooseTurn(color, rolls);
 }
-gameLoop();
+gameLoop(white);
 // displayBoard();
 // let whiteTurn = getAvailableTurns(white);
 // console.log(whiteTurn);
