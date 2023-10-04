@@ -72,11 +72,10 @@ const getAvailableTurns = color => {
 // Filters a list of turns to only give the legal turns for a roll
 const filterLegalTurns = (color, roll) => {
     let availableTurns = getAvailableTurns(color);
-    let insideHomePoints = getHomePoints();
+    let insideHomePoints = getHomePoints(color);
     debugger
     // If the player has a point on the bar, its their only allowed move
     if (bar[color]) {
-        console.log((color == white ? -1 : 24) + (color == white ? roll : -roll));
         if (board[(color == white ? -1 : 24) + (color == white ? roll : -roll)][0] != (color == white ? red : white))
             return [['Bar', roll]]; // Nested to follow convention of an array of moves [start, roll]
         return [];
@@ -88,12 +87,13 @@ const filterLegalTurns = (color, roll) => {
     
     if (!total) 
         return availableTurns;
+    availableTurns.filter(point => color == white ? point + roll < 24 : point + roll >= 0);
 
     // Filter the moves available to those that don't bear off a tablemen
     let legalTurnCombos = [];
 
     availableTurns.forEach(turn => {
-        let endValue = getPointAt(turn + roll);
+        let endValue = getPointAt(turn + roll * (color == white ? 1 : -1));
         if (endValue == null) 
             return;
         if (endValue[0] === color || endValue[0] === unassigned || endValue[1] === 1) 
@@ -115,11 +115,13 @@ const moveTableman = (point, dist, color) => {
             return true;
         } else return false;
 
-    
-
     let startPos = board[point];
     if (startPos[0] != color) return false;
     if (startPos[0] === red) dist *= -1;
+
+    if (point + dist > 23 || point + dist < 0) {
+        
+    }
 
     let endPos = board[point + dist];
     if (endPos[0] == (color == white ? red : white) && endPos[1] > 1)
@@ -200,7 +202,7 @@ const chooseTurn = (color, rolls) => {
 
         moveTableman(move, roll, color);
         displayBoard();
-        
+
         rolls.splice(rolls.indexOf(roll), 1);
         if (rolls.length) chooseTurn(color, rolls)
         else if(!(isWinner() + 1)) gameLoop((color + 1) % 2);
