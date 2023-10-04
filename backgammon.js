@@ -23,7 +23,7 @@ board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
 //          [red, 1], [red, 1], [-1, 0], [-1, 0], [-1, 0], [white, 5],
 //          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
 //          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
-bar = [1, 3];
+bar = [0, 0];
 
 // IMPLEMENTED
 // the goal of the game is to 'bear off' all your tablemen
@@ -101,8 +101,6 @@ const filterLegalTurns = (color, roll) => {
 const rollDice = () => [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
 
 const moveTableman = (point, dist, color) => {
-    console.log((color == white ? -1 : 24) + (color == white ? dist : -dist));
-
     if (point === "Bar") 
         // If the tableman is entering the board onto a point thats not the other players
         if (board[(color == white ? -1 : 24) + (color == white ? dist : -dist)][0] !== (color == white ? red : white)){
@@ -141,10 +139,10 @@ const moveTableman = (point, dist, color) => {
 }
 
 const displayBoard = () => {
-    let boardStr = "";
+    let boardStr = "1 1 1\n2 1 0 9 8 7 6 5 4 3 2 1\n";
     for (let i = 0; i < 12; i++) {
         let addStr = "";
-        debugger
+        
         if (i === 0) {
             for (let j = 11; j >= 0; j--)
                 addStr += `${getColorAt(j)} `;
@@ -163,27 +161,60 @@ const displayBoard = () => {
             }
         }
         if (i === 5) addStr += `\n------${(bar[white] ? `w:${bar[white]}`.padEnd(6, "-") : "------") + (bar[red] ? `${bar[red]}:r`.padStart(5, "-") : "------")}------`;
-        debugger
+        
         boardStr += `${addStr}\n`;
     }
+    boardStr += '1 1 1 1 1 1 1 2 2 2 2 2\n';
+    boardStr += '3 4 5 6 7 8 9 0 1 2 3 4\n';
     console.log(boardStr);
 } 
 
+const getTurnText = (turns) => {
+    return turns.map((turn, i) => `${i + 1}: point ${turn[0]+1}, roll ${turn[1]}.\n`).join("");
+}
 
+const chooseTurn = (color, rolls) => {
+    let turns = rolls.map(roll => filterLegalTurns(color, roll));
+    turns = turns.flat(1);
+    if (!turns.length) {
+        console.log("No Available Moves.")
+        return;
+    }
+    rl.question(`Available Turns: \n${getTurnText(turns)}\nChoose a turn: `, (answer) => {
+        answer = parseInt(answer);
+        if (isNaN(answer)) {
+            console.log("\nInvalid Input.\n");
+            chooseTurn(color, rolls);
+            return;
+        }
+        let [move, roll] = turns[answer-1];
 
-displayBoard();
-let whiteTurn = getAvailableTurns(white);
-console.log(whiteTurn);
-console.log(getAvailableTurns(red));
-let roll = rollDice();
-console.log(roll);
-let legalWhiteTurns = filterLegalTurns(white, roll[0]);
-console.log(legalWhiteTurns);
-if (legalWhiteTurns.length)
-console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
-legalWhiteTurns = filterLegalTurns(white, roll[1]);
-console.log(legalWhiteTurns);
-if (legalWhiteTurns.length)
-console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
-displayBoard();
-rl.close();
+        moveTableman(move, roll, color);
+        displayBoard();
+        rolls.splice(rolls.indexOf(roll), 1);
+        if (rolls.length) chooseTurn(color, rolls)
+        else rl.close();
+    });
+}
+
+const gameLoop = () => {
+    displayBoard();
+    let rolls = rollDice();
+    chooseTurn(white, rolls);
+}
+gameLoop();
+// displayBoard();
+// let whiteTurn = getAvailableTurns(white);
+// console.log(whiteTurn);
+// console.log(getAvailableTurns(red));
+// let roll = rollDice();
+// console.log(roll);
+// let legalWhiteTurns = filterLegalTurns(white, roll[0]);
+// console.log(legalWhiteTurns);
+// if (legalWhiteTurns.length)
+// console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
+// legalWhiteTurns = filterLegalTurns(white, roll[1]);
+// console.log(legalWhiteTurns);
+// if (legalWhiteTurns.length)
+// console.log(moveTableman(legalWhiteTurns[0][0], legalWhiteTurns[0][1], white));
+// displayBoard();
