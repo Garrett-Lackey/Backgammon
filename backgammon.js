@@ -14,15 +14,15 @@ const white      =  1;
 // Global Variables
 // Contains 24 points with an array to show ownership and amount located 
 // DEBUG BOARD
-board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
-         [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
+board = [[white, 2], [red, 1], [red, 1], [red, 1], [red, 1], [red, 1],
+         [red, 1], [red, 1], [-1, 0], [-1, 0], [-1, 0], [white, 5],
          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
 // DEFAULT BOARD LAYOUT
-// board = [[white, 2], [red, 1], [red, 1], [red, 1], [red, 1], [red, 1],
-//          [red, 1], [red, 1], [-1, 0], [-1, 0], [-1, 0], [white, 5],
-//          [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
-//          [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2] ];
+board = [[white, 2], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 5],
+         [-1, 0], [red, 3], [-1, 0], [-1, 0], [-1, 0], [white, 5],
+         [red, 5], [-1, 0], [-1, 0], [-1, 0], [white, 3], [-1, 0], 
+         [white, 5], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [red, 2]];
 bar = [0, 0];
 
 // IMPLEMENTED
@@ -55,8 +55,8 @@ const getValueAt = index => {
 const getHomePoints = color => board.filter((point, index) => color == white ? index >= 19 : index <= 4)
 const getAllValues = (points, color) => points.reduce((acc, point) => point[0] == color ? acc + point[1] : acc, 0)
 const isWinner = () => {
-    if (getAllValues(board, white).length == 0) return white;
-    else if (getAllValues(board, red).length == 0) return red;
+    if (getAllValues(board, white) == 0) return white;
+    else if (getAllValues(board, red) == 0) return red;
     return -1;
 }
 
@@ -86,7 +86,7 @@ const filterLegalTurns = (color, roll) => {
     total -= getAllValues(insideHomePoints, color);
     
     if (!total) 
-        return availableTurns;
+        return availableTurns.map(point => [point, roll]);
     availableTurns.filter(point => color == white ? point + roll < 24 : point + roll >= 0);
 
     // Filter the moves available to those that don't bear off a tablemen
@@ -120,7 +120,9 @@ const moveTableman = (point, dist, color) => {
     if (startPos[0] === red) dist *= -1;
 
     if (point + dist > 23 || point + dist < 0) {
-        
+        startPos[1]--;
+        if (!startPos[1]) startPos[0] = unassigned;
+        return;
     }
 
     let endPos = board[point + dist];
@@ -186,7 +188,7 @@ const chooseTurn = (color, rolls) => {
 
     if (!turns.length) {
         console.log("No Available Moves.")
-        if(!(isWinner() + 1)) gameLoop((color + 1) % 2);
+        gameLoop((color + 1) % 2);
         return;
     }
 
@@ -210,6 +212,13 @@ const chooseTurn = (color, rolls) => {
 }
 
 const gameLoop = (color) => {
+    let winner = isWinner();
+    if(winner + 1) {
+        console.log(`${winner == white ? "White" : "Red"} is the Winner!`)
+        rl.close();
+        return;
+    }
+
     displayBoard();
     let rolls = rollDice();
     console.log(`${color === white ? "White" : "Red"}'s turn.\n`)
